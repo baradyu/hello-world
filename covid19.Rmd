@@ -1,0 +1,65 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+```{r}
+url <- "https://www.ecdc.europa.eu/sites/default/files/documents/COVID-19-geographic-disbtribution-worldwide-2020-03-23.xlsx"
+
+download.file(url, "data.xlsx", method = "curl")
+library(readxl)
+data <- read_excel("data.xlsx")
+df <- data
+df <- df[,-c(2,3,4)]
+df <- df[,c(1,5,4,2,3)]
+colnames(df) <- c("date","code","country","case","death")
+totalcase <- c(1:nrow(df))
+totaldeath <- c(1:nrow(df))
+df <- cbind(df,totalcase,totaldeath)
+dflist <- split(df, df$country)
+```
+
+##totalcase count
+```{r}
+for (i in 1:length(dflist)) {
+  dflist[[i]][1,6] <- sum(dflist[[i]][,4], na.rm = T)
+  for (k in 1:nrow(dflist[[i]])) {
+    dflist[[i]][k+1,6] <- dflist[[i]][k,6] - dflist[[i]][k,4]
+  }
+}
+```
+
+##totaldeath count
+```{r}
+for (i in 1:length(dflist)) {
+  dflist[[i]][1,7] <- sum(dflist[[i]][,5], na.rm = T)
+  for (k in 1:nrow(dflist[[i]])) {
+    dflist[[i]][k+1,7] <- dflist[[i]][k,7] - dflist[[i]][k,5]
+  }
+}
+```
+
+##countries with most cases
+```{r}
+dt1 <- rbind(dflist$China, dflist$Italy, dflist$United_States_of_America, dflist$Spain,
+             dflist$Germany, dflist$Iran, dflist$France, dflist$South_Korea, dflist$Turkey)
+
+dt2 <- rbind(dflist$Italy, dflist$United_States_of_America, dflist$Spain,
+             dflist$Germany, dflist$Iran, dflist$France, dflist$South_Korea, dflist$Turkey)
+```
+
+```{r}
+library(ggplot2)
+
+ggplot(dt1, aes(x = date , y = totalcase, color = country)) + 
+  geom_line(size = 1) + theme_berat()
+
+ggplot(dt2, aes(x = date , y = totalcase, color = country)) + 
+  geom_line(size = 1) + theme_berat()
+
+
+```
+
+
+
+
